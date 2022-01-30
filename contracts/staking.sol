@@ -7,7 +7,7 @@ contract STAKING {
   IERC20 private rewardsToken;
   IERC20 private stakingToken;
 
-  uint256 public _totalSupply;
+  uint256 public _totalStaked;
   uint256 public _stakePeriod; //время через которое начисляется процент
   uint256 public _earningPercentage; //базовый процент для начисления ревордов
   address public _owner;
@@ -33,7 +33,7 @@ contract STAKING {
     stakingToken = IERC20(_stakingToken);
     rewardsToken = IERC20(_rewardsToken);
     _owner = msg.sender;
-    _stakePeriod = 1200;
+    _stakePeriod = 120;
     _earningPercentage = 20;
   }
 
@@ -62,8 +62,8 @@ contract STAKING {
 
   function stake(uint256 _amount) external returns (uint256) {
     require(_amount > 0, "Amount sould be more than zerro.");
-    stakingToken.transferFrom(msg.sender, _owner, _amount);
-    _totalSupply += _amount;
+    stakingToken.transferFrom(msg.sender, address(this), _amount);
+    _totalStaked += _amount;
     _staker[msg.sender].balance += _amount;
     _staker[msg.sender].transactions.push(
       StakeTransaction({ amount: _amount, timestamp: block.timestamp })
@@ -92,12 +92,8 @@ contract STAKING {
     StakerInfo storage staker = _staker[msg.sender];
 
     uint256 valueForCharge = amount;
-
     stakingToken.transfer(msg.sender, amount);
-
-    claim();
-
-    _totalSupply -= amount;
+    _totalStaked -= amount;
     staker.balance -= amount;
 
     while (valueForCharge > 0) {
@@ -127,11 +123,11 @@ contract STAKING {
   }
 
   function _quantityClaimForPeriod(uint256 amount)
-    private
+    public
     view
     returns (uint256)
   {
-    return ((amount * _earningPercentage) / 100) / _stakePeriod;
+    return (amount * _earningPercentage) / 100;
   }
 
   function calcClaimValue(address _sender) public view returns (uint256) {
@@ -140,13 +136,25 @@ contract STAKING {
 
     for (uint256 i = 0; i < transactions.length; i++) {
       if ((block.timestamp - transactions[i].timestamp) > _stakePeriod) {
-        claimAmount +=
-          _quantityClaimForPeriod(transactions[i].amount) *
-          (block.timestamp - transactions[i].timestamp) -
-          _staker[_sender].claimedValue;
+        claimAmount += _quantityClaimForPeriod(transactions[i].amount);
       }
     }
 
+    claimAmount -= _staker[_sender].claimedValue;
+
     return claimAmount;
+  }
+
+  function getTransactionTS(address _sender) public view returns (uint256) {
+    StakeTransaction[] memory transactions = _staker[_sender].transactions;
+    return block.timestamp - transactions[0].timestamp;
+  }
+
+  function getStakerInfo(address staker)
+    public
+    view
+    returns (StakerInfo memory)
+  {
+    return _staker[staker];
   }
 }
