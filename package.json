@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "redeploy": "npx hardhat clean && npx hardhat run scripts/deploy-tokyo.ts --network rinkeby && npx hardhat run scripts/deploy-yamal.ts --network rinkeby && npx hardhat run scripts/deploy-staking.ts --network rinkeby"
   },
   "author": "",
   "license": "ISC",

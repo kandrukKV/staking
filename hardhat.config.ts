@@ -7,6 +7,8 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
+import "./tasks/index.ts";
+
 dotenv.config();
 
 const config: HardhatUserConfig = {
@@ -15,24 +17,21 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: process.env.ALCHEMY_URL || "",
       accounts:
-        process.env.PRIVATE_ACC_KEY !== undefined &&
         process.env.PRIVATE_ACC_KEY1 !== undefined &&
         process.env.PRIVATE_ACC_KEY2 !== undefined
-          ? [
-              process.env.PRIVATE_ACC_KEY,
-              process.env.PRIVATE_ACC_KEY1,
-              process.env.PRIVATE_ACC_KEY2,
-            ]
+          ? [process.env.PRIVATE_ACC_KEY1, process.env.PRIVATE_ACC_KEY2]
           : [],
+      gas: "auto",
+      gasPrice: 30_000_000_000, // gwei
     },
     hardhat: {
       chainId: 31337,
     },
   },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
-  },
+  // gasReporter: {
+  //   enabled: process.env.REPORT_GAS !== undefined,
+  //   currency: "USD",
+  // },
 };
 
 export default config;
